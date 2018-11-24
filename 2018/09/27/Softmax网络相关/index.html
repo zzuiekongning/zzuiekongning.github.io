@@ -1,0 +1,856 @@
+<!doctype html>
+<html class="theme-next use-motion ">
+<head><meta name="generator" content="Hexo 3.8.0">
+  
+
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+  <link rel="stylesheet" type="text/css" href="/others/fancybox/source/jquery.fancybox.css?v=2.1.5">
+
+
+
+  
+    <link href="//fonts.googleapis.com/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+<link rel="stylesheet" type="text/css" href="/others/font-awesome/css/font-awesome.min.css?v=4.4.0">
+
+<link rel="stylesheet" type="text/css" href="/css/main.css?v=0.4.5.2">
+
+
+    <meta name="description" content="大连理工大学硕士，关注机器学习和人工智能。">
+
+
+
+  <meta name="keywords" content="Hexo,next">
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/images/header.ico?v=0.4.5.2">
+
+
+<meta name="description" content="Table of Contents:  Generating some data Training a Softmax Linear Classifier Initialize the parameters Compute the class scores Compute the loss Computing the analytic gradient with backpropagation P">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Softmax网络相关">
+<meta property="og:url" content="http://yoursite.com/2018/09/27/Softmax网络相关/index.html">
+<meta property="og:site_name" content="Ning&#39;s Notes">
+<meta property="og:description" content="Table of Contents:  Generating some data Training a Softmax Linear Classifier Initialize the parameters Compute the class scores Compute the loss Computing the analytic gradient with backpropagation P">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://yoursite.com/2018/09/27/Softmax网络相关/Softmax网络相关/spiral_raw.png">
+<meta property="og:image" content="http://yoursite.com/2018/09/27/Softmax网络相关/Softmax网络相关/spiral_linear.png">
+<meta property="og:image" content="http://yoursite.com/2018/09/27/Softmax网络相关/Softmax网络相关/spiral_net.png">
+<meta property="og:updated_time" content="2018-11-23T15:22:01.617Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Softmax网络相关">
+<meta name="twitter:description" content="Table of Contents:  Generating some data Training a Softmax Linear Classifier Initialize the parameters Compute the class scores Compute the loss Computing the analytic gradient with backpropagation P">
+<meta name="twitter:image" content="http://yoursite.com/2018/09/27/Softmax网络相关/Softmax网络相关/spiral_raw.png">
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'post'
+  };
+</script>
+
+
+
+  <title> Softmax网络相关 | Ning's Notes </title>
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+
+
+
+  <div id="container" class="container one-column page-post-detail">
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+      
+	  	<span style="font-size:14px;float:right;padding:39px 40px 0 0;">向前走，总会看见花开。</span>
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+
+        	<div id="content" class="content"> 
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope="" itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Softmax网络相关
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            Posted on
+            <time itemprop="dateCreated" datetime="2018-09-27T14:50:48+08:00" content="2018-09-27">
+              2018-09-27 14:50
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+            <span id="/2018/09/27/Softmax网络相关/" class="leancloud_visitors" data-flag-title="Softmax网络相关">
+            &nbsp; | &nbsp;   
+            views
+            </span>
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><p>Table of Contents:</p>
+<ul>
+<li><a href="#data">Generating some data</a></li>
+<li><a href="#linear">Training a Softmax Linear Classifier</a><ul>
+<li><a href="#init">Initialize the parameters</a></li>
+<li><a href="#scores">Compute the class scores</a></li>
+<li><a href="#loss">Compute the loss</a></li>
+<li><a href="#grad">Computing the analytic gradient with backpropagation</a></li>
+<li><a href="#update">Performing a parameter update</a></li>
+<li><a href="#together">Putting it all together: Training a Softmax Classifier</a></li>
+</ul>
+</li>
+<li><a href="#net">Training a Neural Network</a></li>
+<li><a href="#summary">Summary</a><a id="more"></a>
+In this section we’ll walk through a complete implementation of a toy Neural Network in 2 dimensions. We’ll first implement a simple linear classifier and then extend the code to a 2-layer Neural Network. As we’ll see, this extension is surprisingly simple and very few changes are necessary.</li>
+</ul>
+<p><a name="data"></a></p>
+<h2 id="Generating-some-data"><a href="#Generating-some-data" class="headerlink" title="Generating some data"></a>Generating some data</h2><p>Lets generate a classification dataset that is not easily linearly separable. Our favorite example is the spiral dataset, which can be generated as follows:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">N = <span class="number">100</span> <span class="comment"># number of points per class</span></span><br><span class="line">D = <span class="number">2</span> <span class="comment"># dimensionality</span></span><br><span class="line">K = <span class="number">3</span> <span class="comment"># number of classes</span></span><br><span class="line">X = np.zeros((N*K,D)) <span class="comment"># data matrix (each row = single example)</span></span><br><span class="line">y = np.zeros(N*K, dtype=<span class="string">'uint8'</span>) <span class="comment"># class labels</span></span><br><span class="line"><span class="keyword">for</span> j <span class="keyword">in</span> xrange(K):</span><br><span class="line">  ix = range(N*j,N*(j+<span class="number">1</span>))</span><br><span class="line">  r = np.linspace(<span class="number">0.0</span>,<span class="number">1</span>,N) <span class="comment"># radius</span></span><br><span class="line">  t = np.linspace(j*<span class="number">4</span>,(j+<span class="number">1</span>)*<span class="number">4</span>,N) + np.random.randn(N)*<span class="number">0.2</span> <span class="comment"># theta</span></span><br><span class="line">  X[ix] = np.c_[r*np.sin(t), r*np.cos(t)]</span><br><span class="line">  y[ix] = j</span><br><span class="line"><span class="comment"># lets visualize the data:</span></span><br><span class="line">plt.scatter(X[:, <span class="number">0</span>], X[:, <span class="number">1</span>], c=y, s=<span class="number">40</span>, cmap=plt.cm.Spectral)</span><br><span class="line">plt.show()</span><br></pre></td></tr></table></figure>
+<p><img src="Softmax网络相关/spiral_raw.png" alt="The toy spiral data consists of three classes (blue, red, yellow) that are not linearly separable"></p>
+<p>Normally we would want to preprocess the dataset so that each feature has zero mean and unit standard deviation, but in this case the features are already in a nice range from -1 to 1, so we skip this step.</p>
+<p><a name="linear"></a></p>
+<h2 id="Training-a-Softmax-Linear-Classifier"><a href="#Training-a-Softmax-Linear-Classifier" class="headerlink" title="Training a Softmax Linear Classifier"></a>Training a Softmax Linear Classifier</h2><p><a name="init"></a></p>
+<h3 id="Initialize-the-parameters"><a href="#Initialize-the-parameters" class="headerlink" title="Initialize the parameters"></a>Initialize the parameters</h3><p>Lets first train a Softmax classifier on this classification dataset. As we saw in the previous sections, the Softmax classifier has a linear score function and uses the cross-entropy loss. The parameters of the linear classifier consist of a weight matrix <code>W</code> and a bias vector <code>b</code> for each class. Lets first initialize these parameters to be random numbers:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># initialize parameters randomly</span></span><br><span class="line">W = <span class="number">0.01</span> * np.random.randn(D,K)</span><br><span class="line">b = np.zeros((<span class="number">1</span>,K))</span><br></pre></td></tr></table></figure>
+<p>Recall that we <code>D = 2</code> is the dimensionality and <code>K = 3</code> is the number of classes. </p>
+<p><a name="scores"></a></p>
+<h3 id="Compute-the-class-scores"><a href="#Compute-the-class-scores" class="headerlink" title="Compute the class scores"></a>Compute the class scores</h3><p>Since this is a linear classifier, we can compute all class scores very simply in parallel with a single matrix multiplication:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># compute class scores for a linear classifier</span></span><br><span class="line">scores = np.dot(X, W) + b</span><br></pre></td></tr></table></figure>
+<p>In this example we have 300 2-D points, so after this multiplication the array <code>scores</code> will have size [300 x 3], where each row gives the class scores corresponding to the 3 classes (blue, red, yellow).</p>
+<p><a name="loss"></a></p>
+<h3 id="Compute-the-loss"><a href="#Compute-the-loss" class="headerlink" title="Compute the loss"></a>Compute the loss</h3><p>The second key ingredient we need is a loss function, which is a differentiable objective that quantifies our unhappiness with the computed class scores. Intuitively, we want the correct class to have a higher score than the other classes. When this is the case, the loss should be low and otherwise the loss should be high. There are many ways to quantify this intuition, but in this example lets use the cross-entropy loss that is associated with the Softmax classifier. Recall that if \(f\) is the array of class scores for a single example (e.g. array of 3 numbers here), then the Softmax classifier computes the loss for that example as:</p>
+<p>$$<br>L_i = -\log\left(\frac{e^{f_{y_i}}}{ \sum_j e^{f_j} }\right)<br>$$</p>
+<p>We can see that the Softmax classifier interprets every element of \(f\) as holding the (unnormalized) log probabilities of the three classes. We exponentiate these to get (unnormalized) probabilities, and then normalize them to get probabilites. Therefore, the expression inside the log is the normalized probability of the correct class. Note how this expression works: this quantity is always between 0 and 1. When the probability of the correct class is very small (near 0), the loss will go towards (positive) infinity. Conversely, when the correct class probability goes towards 1, the loss will go towards zero because \(log(1) = 0\). Hence, the expression for \(L_i\) is low when the correct class probability is high, and it’s very high when it is low.</p>
+<p>Recall also that the full Softmax classifier loss is then defined as the average cross-entropy loss over the training examples and the regularization:</p>
+<p>$$<br>L =  \underbrace{ \frac{1}{N} \sum_i L_i }_\text{data loss} + \underbrace{ \frac{1}{2} \lambda \sum_k\sum_l W_{k,l}^2 }_\text{regularization loss} \\<br>$$</p>
+<p>Given the array of <code>scores</code> we’ve computed above, we can compute the loss. First, the way to obtain the probabilities is straight forward:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">num_examples = X.shape[<span class="number">0</span>]</span><br><span class="line"><span class="comment"># get unnormalized probabilities</span></span><br><span class="line">exp_scores = np.exp(scores)</span><br><span class="line"><span class="comment"># normalize them for each example</span></span><br><span class="line">probs = exp_scores / np.sum(exp_scores, axis=<span class="number">1</span>, keepdims=<span class="keyword">True</span>)</span><br></pre></td></tr></table></figure>
+<p>We now have an array <code>probs</code> of size [300 x 3], where each row now contains the class probabilities. In particular, since we’ve normalized them every row now sums to one. We can now query for the  log probabilities assigned to the correct classes in each example:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">correct_logprobs = -np.log(probs[range(num_examples),y])</span><br></pre></td></tr></table></figure>
+<p>The array <code>correct_logprobs</code> is a 1D array of just the probabilities assigned to the correct classes for each example. The full loss is then the average of these log probabilities and the regularization loss:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># compute the loss: average cross-entropy loss and regularization</span></span><br><span class="line">data_loss = np.sum(correct_logprobs)/num_examples</span><br><span class="line">reg_loss = <span class="number">0.5</span>*reg*np.sum(W*W)</span><br><span class="line">loss = data_loss + reg_loss</span><br></pre></td></tr></table></figure>
+<p>In this code, the regularization strength \(\lambda\) is stored inside the <code>reg</code>. The convenience factor of <code>0.5</code> multiplying the regularization will become clear in a second. Evaluating this in the beginning (with random parameters) might give us <code>loss = 1.1</code>, which is <code>np.log(1.0/3)</code>, since with small initial random weights all probabilities assigned to all classes are about one third. We now want to make the loss as low as possible, with <code>loss = 0</code> as the absolute lower bound. But the lower the loss is, the higher are the probabilities assigned to the correct classes for all examples.</p>
+<p><a name="grad"></a></p>
+<h3 id="Computing-the-Analytic-Gradient-with-Backpropagation"><a href="#Computing-the-Analytic-Gradient-with-Backpropagation" class="headerlink" title="Computing the Analytic Gradient with Backpropagation"></a>Computing the Analytic Gradient with Backpropagation</h3><p>We have a way of evaluating the loss, and now we have to minimize it. We’ll do so with gradient descent. That is, we start with random parameters (as shown above), and evaluate the gradient of the loss function with respect to the parameters, so that we know how we should change the parameters to decrease the loss. Lets introduce the intermediate variable \(p\), which is a vector of the (normalized) probabilities. The loss for one example is:</p>
+<p>$$<br>p_k = \frac{e^{f_k}}{ \sum_j e^{f_j} } \hspace{1in} L_i =-\log\left(p_{y_i}\right)<br>$$</p>
+<p>We now wish to understand how the computed scores inside \(f\) should change to decrease the loss \(L_i\) that this example contributes to the full objective. In other words, we want to derive the gradient \( \partial L_i / \partial f_k \). The loss \(L_i\) is computed from \(p\), which in turn depends on \(f\). It’s a fun exercise to the reader to use the chain rule to derive the gradient, but it turns out to be extremely simple and interpretible in the end, after a lot of things cancel out:</p>
+<p>$$<br>\frac{\partial L_i }{ \partial f_k } = p_k - \mathbb{1}(y_i = k)<br>$$</p>
+<p>Notice how elegant and simple this expression is. Suppose the probabilities we computed were <code>p = [0.2, 0.3, 0.5]</code>, and that the correct class was the middle one (with probability 0.3). According to this derivation the gradient on the scores would be <code>df = [0.2, -0.7, 0.5]</code>. Recalling what the interpretation of the gradient, we see that this result is highly intuitive: increasing the first or last element of the score vector <code>f</code> (the scores of the incorrect classes) leads to an <em>increased</em> loss (due to the positive signs +0.2 and +0.5) - and increasing the loss is bad, as expected. However, increasing the score of the correct class has <em>negative</em> influence on the loss. The gradient of -0.7 is telling us that increasing the correct class score would lead to a decrease of the loss \(L_i\), which makes sense. </p>
+<p>All of this boils down to the following code. Recall that <code>probs</code> stores the probabilities of all classes (as rows) for each example. To get the gradient on the scores, which we call <code>dscores</code>, we proceed as follows:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dscores = probs</span><br><span class="line">dscores[range(num_examples),y] -= <span class="number">1</span></span><br><span class="line">dscores /= num_examples</span><br></pre></td></tr></table></figure>
+<p>Lastly, we had that <code>scores = np.dot(X, W) + b</code>, so armed with the gradient on <code>scores</code> (stored in <code>dscores</code>), we can now backpropagate into <code>W</code> and <code>b</code>:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dW = np.dot(X.T, dscores)</span><br><span class="line">db = np.sum(dscores, axis=<span class="number">0</span>, keepdims=<span class="keyword">True</span>)</span><br><span class="line">dW += reg*W <span class="comment"># don't forget the regularization gradient</span></span><br></pre></td></tr></table></figure>
+<p>Where we see that we have backpropped through the matrix multiply operation, and also added the contribution from the regularization. Note that the regularization gradient has the very simple form <code>reg*W</code> since we used the constant <code>0.5</code> for its loss contribution (i.e. \(\frac{d}{dw} ( \frac{1}{2} \lambda w^2) = \lambda w\). This is a common convenience trick that simplifies the gradient expression.</p>
+<p><a name="update"></a></p>
+<h3 id="Performing-a-parameter-update"><a href="#Performing-a-parameter-update" class="headerlink" title="Performing a parameter update"></a>Performing a parameter update</h3><p>Now that we’ve evaluated the gradient we know how every parameter influences the loss function. We will now perform a parameter update in the <em>negative</em> gradient direction to <em>decrease</em> the loss:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># perform a parameter update</span></span><br><span class="line">W += -step_size * dW</span><br><span class="line">b += -step_size * db</span><br></pre></td></tr></table></figure>
+<p><a name="together"></a></p>
+<h3 id="Putting-it-all-together-Training-a-Softmax-Classifier"><a href="#Putting-it-all-together-Training-a-Softmax-Classifier" class="headerlink" title="Putting it all together: Training a Softmax Classifier"></a>Putting it all together: Training a Softmax Classifier</h3><p>Putting all of this together, here is the full code for training a Softmax classifier with Gradient descent:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#Train a Linear Classifier</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># initialize parameters randomly</span></span><br><span class="line">W = <span class="number">0.01</span> * np.random.randn(D,K)</span><br><span class="line">b = np.zeros((<span class="number">1</span>,K))</span><br><span class="line"></span><br><span class="line"><span class="comment"># some hyperparameters</span></span><br><span class="line">step_size = <span class="number">1e-0</span></span><br><span class="line">reg = <span class="number">1e-3</span> <span class="comment"># regularization strength</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># gradient descent loop</span></span><br><span class="line">num_examples = X.shape[<span class="number">0</span>]</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> xrange(<span class="number">200</span>):</span><br><span class="line">  </span><br><span class="line">  <span class="comment"># evaluate class scores, [N x K]</span></span><br><span class="line">  scores = np.dot(X, W) + b </span><br><span class="line">  </span><br><span class="line">  <span class="comment"># compute the class probabilities</span></span><br><span class="line">  exp_scores = np.exp(scores)</span><br><span class="line">  probs = exp_scores / np.sum(exp_scores, axis=<span class="number">1</span>, keepdims=<span class="keyword">True</span>) <span class="comment"># [N x K]</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment"># compute the loss: average cross-entropy loss and regularization</span></span><br><span class="line">  correct_logprobs = -np.log(probs[range(num_examples),y])</span><br><span class="line">  data_loss = np.sum(correct_logprobs)/num_examples</span><br><span class="line">  reg_loss = <span class="number">0.5</span>*reg*np.sum(W*W)</span><br><span class="line">  loss = data_loss + reg_loss</span><br><span class="line">  <span class="keyword">if</span> i % <span class="number">10</span> == <span class="number">0</span>:</span><br><span class="line">    <span class="keyword">print</span> <span class="string">"iteration %d: loss %f"</span> % (i, loss)</span><br><span class="line">  </span><br><span class="line">  <span class="comment"># compute the gradient on scores</span></span><br><span class="line">  dscores = probs</span><br><span class="line">  dscores[range(num_examples),y] -= <span class="number">1</span></span><br><span class="line">  dscores /= num_examples</span><br><span class="line">  </span><br><span class="line">  <span class="comment"># backpropate the gradient to the parameters (W,b)</span></span><br><span class="line">  dW = np.dot(X.T, dscores)</span><br><span class="line">  db = np.sum(dscores, axis=<span class="number">0</span>, keepdims=<span class="keyword">True</span>)</span><br><span class="line">  </span><br><span class="line">  dW += reg*W <span class="comment"># regularization gradient</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment"># perform a parameter update</span></span><br><span class="line">  W += -step_size * dW</span><br><span class="line">  b += -step_size * db</span><br></pre></td></tr></table></figure>
+<p>Running this prints the output:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">iteration 0: loss 1.096956</span><br><span class="line">iteration 10: loss 0.917265</span><br><span class="line">iteration 20: loss 0.851503</span><br><span class="line">iteration 30: loss 0.822336</span><br><span class="line">iteration 40: loss 0.807586</span><br><span class="line">iteration 50: loss 0.799448</span><br><span class="line">iteration 60: loss 0.794681</span><br><span class="line">iteration 70: loss 0.791764</span><br><span class="line">iteration 80: loss 0.789920</span><br><span class="line">iteration 90: loss 0.788726</span><br><span class="line">iteration 100: loss 0.787938</span><br><span class="line">iteration 110: loss 0.787409</span><br><span class="line">iteration 120: loss 0.787049</span><br><span class="line">iteration 130: loss 0.786803</span><br><span class="line">iteration 140: loss 0.786633</span><br><span class="line">iteration 150: loss 0.786514</span><br><span class="line">iteration 160: loss 0.786431</span><br><span class="line">iteration 170: loss 0.786373</span><br><span class="line">iteration 180: loss 0.786331</span><br><span class="line">iteration 190: loss 0.786302</span><br></pre></td></tr></table></figure>
+<p>We see that we’ve converged to something after about 190 iterations. We can evaluate the training set accuracy:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># evaluate training set accuracy</span></span><br><span class="line">scores = np.dot(X, W) + b</span><br><span class="line">predicted_class = np.argmax(scores, axis=<span class="number">1</span>)</span><br><span class="line"><span class="keyword">print</span> <span class="string">'training accuracy: %.2f'</span> % (np.mean(predicted_class == y))</span><br></pre></td></tr></table></figure>
+<p>This prints <strong>49%</strong>. Not very good at all, but also not surprising given that the dataset is constructed so it is not linearly separable. We can also plot the learned decision boundaries:</p>
+<p><img src="Softmax网络相关/spiral_linear.png" alt="Linear classifier fails to learn the toy spiral dataset"></p>
+<p><a name="net"></a></p>
+<h2 id="Training-a-Neural-Network"><a href="#Training-a-Neural-Network" class="headerlink" title="Training a Neural Network"></a>Training a Neural Network</h2><p>Clearly, a linear classifier is inadequate for this dataset and we would like to use a Neural Network. One additional hidden layer will suffice for this toy data. We will now need two sets of weights and biases (for the first and second layers):</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># initialize parameters randomly</span></span><br><span class="line">h = <span class="number">100</span> <span class="comment"># size of hidden layer</span></span><br><span class="line">W = <span class="number">0.01</span> * np.random.randn(D,h)</span><br><span class="line">b = np.zeros((<span class="number">1</span>,h))</span><br><span class="line">W2 = <span class="number">0.01</span> * np.random.randn(h,K)</span><br><span class="line">b2 = np.zeros((<span class="number">1</span>,K))</span><br></pre></td></tr></table></figure>
+<p>The forward pass to compute scores now changes form:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># evaluate class scores with a 2-layer Neural Network</span></span><br><span class="line">hidden_layer = np.maximum(<span class="number">0</span>, np.dot(X, W) + b) <span class="comment"># note, ReLU activation</span></span><br><span class="line">scores = np.dot(hidden_layer, W2) + b2</span><br></pre></td></tr></table></figure>
+<p>Notice that the only change from before is one extra line of code, where we first compute the hidden layer representation and then the scores based on this hidden layer. Crucially, we’ve also added a non-linearity, which in this case is simple ReLU that thresholds the activations on the hidden layer at zero.</p>
+<p>Everything else remains the same. We compute the loss based on the scores exactly as before, and get the gradient for the scores <code>dscores</code> exactly as before. However, the way we backpropagate that gradient into the model parameters now changes form, of course. First lets backpropagate the second layer of the Neural Network. This looks identical to the code we had for the Softmax classifier, except we’re replacing <code>X</code> (the raw data), with the variable <code>hidden_layer</code>):</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># backpropate the gradient to the parameters</span></span><br><span class="line"><span class="comment"># first backprop into parameters W2 and b2</span></span><br><span class="line">dW2 = np.dot(hidden_layer.T, dscores)</span><br><span class="line">db2 = np.sum(dscores, axis=<span class="number">0</span>, keepdims=<span class="keyword">True</span>)</span><br></pre></td></tr></table></figure>
+<p>However, unlike before we are not yet done, because <code>hidden_layer</code> is itself a function of other parameters and the data! We need to continue backpropagation through this variable. Its gradient can be computed as:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dhidden = np.dot(dscores, W2.T)</span><br></pre></td></tr></table></figure>
+<p>Now we have the gradient on the outputs of the hidden layer. Next, we have to backpropagate the ReLU non-linearity. This turns out to be easy because ReLU during the backward pass is effectively a switch. Since \(r = max(0, x)\), we have that \(\frac{dr}{dx} = 1(x &gt; 0) \). Combined with the chain rule, we see that the ReLU unit lets the gradient pass through unchanged if its input was greater than 0, but <em>kills it</em> if its input was less than zero during the forward pass. Hence, we can backpropagate the ReLU in place simply with:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># backprop the ReLU non-linearity</span></span><br><span class="line">dhidden[hidden_layer &lt;= <span class="number">0</span>] = <span class="number">0</span></span><br></pre></td></tr></table></figure>
+<p>And now we finally continue to the first layer weights and biases:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># finally into W,b</span></span><br><span class="line">dW = np.dot(X.T, dhidden)</span><br><span class="line">db = np.sum(dhidden, axis=<span class="number">0</span>, keepdims=<span class="keyword">True</span>)</span><br></pre></td></tr></table></figure>
+<p>We’re done! We have the gradients <code>dW,db,dW2,db2</code> and can perform the parameter update. Everything else remains unchanged. The full code looks very similar:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># initialize parameters randomly</span></span><br><span class="line">h = <span class="number">100</span> <span class="comment"># size of hidden layer</span></span><br><span class="line">W = <span class="number">0.01</span> * np.random.randn(D,h)</span><br><span class="line">b = np.zeros((<span class="number">1</span>,h))</span><br><span class="line">W2 = <span class="number">0.01</span> * np.random.randn(h,K)</span><br><span class="line">b2 = np.zeros((<span class="number">1</span>,K))</span><br><span class="line"></span><br><span class="line"><span class="comment"># some hyperparameters</span></span><br><span class="line">step_size = <span class="number">1e-0</span></span><br><span class="line">reg = <span class="number">1e-3</span> <span class="comment"># regularization strength</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># gradient descent loop</span></span><br><span class="line">num_examples = X.shape[<span class="number">0</span>]</span><br><span class="line"><span class="keyword">for</span> i <span class="keyword">in</span> xrange(<span class="number">10000</span>):</span><br><span class="line">  </span><br><span class="line">  <span class="comment"># evaluate class scores, [N x K]</span></span><br><span class="line">  hidden_layer = np.maximum(<span class="number">0</span>, np.dot(X, W) + b) <span class="comment"># note, ReLU activation</span></span><br><span class="line">  scores = np.dot(hidden_layer, W2) + b2</span><br><span class="line">  </span><br><span class="line">  <span class="comment"># compute the class probabilities</span></span><br><span class="line">  exp_scores = np.exp(scores)</span><br><span class="line">  probs = exp_scores / np.sum(exp_scores, axis=<span class="number">1</span>, keepdims=<span class="keyword">True</span>) <span class="comment"># [N x K]</span></span><br><span class="line">  </span><br><span class="line">  <span class="comment"># compute the loss: average cross-entropy loss and regularization</span></span><br><span class="line">  correct_logprobs = -np.log(probs[range(num_examples),y])</span><br><span class="line">  data_loss = np.sum(correct_logprobs)/num_examples</span><br><span class="line">  reg_loss = <span class="number">0.5</span>*reg*np.sum(W*W) + <span class="number">0.5</span>*reg*np.sum(W2*W2)</span><br><span class="line">  loss = data_loss + reg_loss</span><br><span class="line">  <span class="keyword">if</span> i % <span class="number">1000</span> == <span class="number">0</span>:</span><br><span class="line">    <span class="keyword">print</span> <span class="string">"iteration %d: loss %f"</span> % (i, loss)</span><br><span class="line">  </span><br><span class="line">  <span class="comment"># compute the gradient on scores</span></span><br><span class="line">  dscores = probs</span><br><span class="line">  dscores[range(num_examples),y] -= <span class="number">1</span></span><br><span class="line">  dscores /= num_examples</span><br><span class="line">  </span><br><span class="line">  <span class="comment"># backpropate the gradient to the parameters</span></span><br><span class="line">  <span class="comment"># first backprop into parameters W2 and b2</span></span><br><span class="line">  dW2 = np.dot(hidden_layer.T, dscores)</span><br><span class="line">  db2 = np.sum(dscores, axis=<span class="number">0</span>, keepdims=<span class="keyword">True</span>)</span><br><span class="line">  <span class="comment"># next backprop into hidden layer</span></span><br><span class="line">  dhidden = np.dot(dscores, W2.T)</span><br><span class="line">  <span class="comment"># backprop the ReLU non-linearity</span></span><br><span class="line">  dhidden[hidden_layer &lt;= <span class="number">0</span>] = <span class="number">0</span></span><br><span class="line">  <span class="comment"># finally into W,b</span></span><br><span class="line">  dW = np.dot(X.T, dhidden)</span><br><span class="line">  db = np.sum(dhidden, axis=<span class="number">0</span>, keepdims=<span class="keyword">True</span>)</span><br><span class="line">  </span><br><span class="line">  <span class="comment"># add regularization gradient contribution</span></span><br><span class="line">  dW2 += reg * W2</span><br><span class="line">  dW += reg * W</span><br><span class="line">  </span><br><span class="line">  <span class="comment"># perform a parameter update</span></span><br><span class="line">  W += -step_size * dW</span><br><span class="line">  b += -step_size * db</span><br><span class="line">  W2 += -step_size * dW2</span><br><span class="line">  b2 += -step_size * db2</span><br></pre></td></tr></table></figure>
+<p>This prints:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">iteration 0: loss 1.098744</span><br><span class="line">iteration 1000: loss 0.294946</span><br><span class="line">iteration 2000: loss 0.259301</span><br><span class="line">iteration 3000: loss 0.248310</span><br><span class="line">iteration 4000: loss 0.246170</span><br><span class="line">iteration 5000: loss 0.245649</span><br><span class="line">iteration 6000: loss 0.245491</span><br><span class="line">iteration 7000: loss 0.245400</span><br><span class="line">iteration 8000: loss 0.245335</span><br><span class="line">iteration 9000: loss 0.245292</span><br></pre></td></tr></table></figure>
+<p>The training accuracy is now:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># evaluate training set accuracy</span></span><br><span class="line">hidden_layer = np.maximum(<span class="number">0</span>, np.dot(X, W) + b)</span><br><span class="line">scores = np.dot(hidden_layer, W2) + b2</span><br><span class="line">predicted_class = np.argmax(scores, axis=<span class="number">1</span>)</span><br><span class="line"><span class="keyword">print</span> <span class="string">'training accuracy: %.2f'</span> % (np.mean(predicted_class == y))</span><br></pre></td></tr></table></figure>
+<p>Which prints <strong>98%</strong>!. We can also visualize the decision boundaries:</p>
+<p><img src="Softmax网络相关/spiral_net.png" alt="Neural Network classifier crushes the spiral dataset"></p>
+<h2 id="Summary"><a href="#Summary" class="headerlink" title="Summary"></a>Summary</h2><p>We’ve worked with a toy 2D dataset and trained both a linear network and a 2-layer Neural Network. We saw that the change from a linear classifier to a Neural Network involves very few changes in the code. The score function changes its form (1 line of code difference), and the backpropagation changes its form (we have to perform one more round of backprop through the hidden layer to the first layer of the network).</p>
+<ul>
+<li>You may want to look at this IPython Notebook code <a href="http://cs.stanford.edu/people/karpathy/cs231nfiles/minimal_net.html" target="_blank" rel="noopener">rendered as HTML</a>.</li>
+<li>Or download the <a href="http://cs.stanford.edu/people/karpathy/cs231nfiles/minimal_net.ipynb" target="_blank" rel="noopener">ipynb file</a></li>
+</ul>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/09/27/随记/" rel="prev">
+                <i class="fa fa-chevron-left"></i> 随记
+              </a>
+            
+          </div>
+
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/27/What-is-going-on-here/" rel="next">
+                What is going on here? <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+ </div>
+
+        
+
+        
+          <div class="comments" id="comments">
+            
+          </div>
+        
+      
+
+        
+          
+  
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+      
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table Of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview" sidebar-panel="">
+        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="/images/default_avatar.jpg" alt="孔宁" itemprop="image">
+          <p class="site-author-name" itemprop="name">孔宁</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">大连理工大学硕士，关注机器学习和人工智能。</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">posts</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            <a href="/categories">
+              <span class="site-state-item-count">0</span>
+              <span class="site-state-item-name">categories</span>
+              </a>
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            <a href="/tags">
+              <span class="site-state-item-count">0</span>
+              <span class="site-state-item-name">tags</span>
+              </a>
+          </div>
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/zzuiekongning?tab=repositories" target="_blank">
+                  <i class="fa fa-github"></i> GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/u/2532196105" target="_blank">
+                  <i class="fa fa-微博"></i> 微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Generating-some-data"><span class="nav-number">1.</span> <span class="nav-text">Generating some data</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Training-a-Softmax-Linear-Classifier"><span class="nav-number">2.</span> <span class="nav-text">Training a Softmax Linear Classifier</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Initialize-the-parameters"><span class="nav-number">2.1.</span> <span class="nav-text">Initialize the parameters</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Compute-the-class-scores"><span class="nav-number">2.2.</span> <span class="nav-text">Compute the class scores</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Compute-the-loss"><span class="nav-number">2.3.</span> <span class="nav-text">Compute the loss</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Computing-the-Analytic-Gradient-with-Backpropagation"><span class="nav-number">2.4.</span> <span class="nav-text">Computing the Analytic Gradient with Backpropagation</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Performing-a-parameter-update"><span class="nav-number">2.5.</span> <span class="nav-text">Performing a parameter update</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Putting-it-all-together-Training-a-Softmax-Classifier"><span class="nav-number">2.6.</span> <span class="nav-text">Putting it all together: Training a Softmax Classifier</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Training-a-Neural-Network"><span class="nav-number">3.</span> <span class="nav-text">Training a Neural Network</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Summary"><span class="nav-number">4.</span> <span class="nav-text">Summary</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+	  </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner"> <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">孔宁</span>
+</div>
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="http://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="#">
+    FreeSky
+  </a>(Reserved)
+
+  
+  <span id="busuanzi_container_site_uv">
+     &nbsp; | &nbsp;  用户量: <span id="busuanzi_value_site_uv"></span>
+  </span>
+  <span id="busuanzi_container_site_pv">
+    &nbsp; | &nbsp;  总访问量: <span id="busuanzi_value_site_pv"></span>
+  </span>
+
+  
+</div>
+
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+ </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/others/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+  
+    
+    
+
+  
+
+
+  
+  
+  <script type="text/javascript" src="/others/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  
+
+  <script type="text/javascript" src="/others/velocity/velocity.min.js"></script>
+  <script type="text/javascript" src="/others/velocity/velocity.ui.min.js"></script>
+
+  <script type="text/javascript" src="/js/motion_global.js?v=0.4.5.2" id="motion.global"></script>
+
+
+
+
+  <script type="text/javascript" src="/js/nav-toggle.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/others/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    var $tocContent = $('.post-toc-content');
+    var $aboutContent = $('#posts-about');
+    if (isDesktop() && CONFIG.sidebar === 'post') {
+      if ($tocContent.length > 0 && $tocContent.html().trim().length > 0 && $aboutContent.length === 0) {
+        displaySidebar();
+      }
+    }
+  });
+</script>
+
+
+
+  <script type="text/javascript">
+    $(document).ready(function () {
+      if (CONFIG.sidebar === 'always') {
+        displaySidebar();
+      }
+      if (isMobile()) {
+        FastClick.attach(document.body);
+      }
+
+      motionIntegrator.bootstrap();
+    });
+  </script>
+
+  
+  
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/lazyload.js"></script>
+  <script type="text/javascript">
+    $(function () {
+      $("#posts").find('img').lazyload({
+        placeholder: "/images/loading.gif",
+        effect: "fadeIn"
+      });
+    });
+  </script>
+  
+     <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+<script>AV.initialize("VmAcWiBwF1SdavvjD8vkHJLn-gzGzoHsz", "cmuscA82gXyC9N1tgjH1m8bK");</script>
+<script>
+function showTime(Counter) {
+  var query = new AV.Query(Counter);
+  $(".leancloud_visitors").each(function() {
+    var url = $(this).attr("id").trim();
+    query.equalTo("url", url);
+    query.find({
+      success: function(results) {
+        if (results.length == 0) {
+          var content = $(document.getElementById(url)).text() + ': 0';
+          $(document.getElementById(url)).text(content);
+          return;
+        }
+        for (var i = 0; i < results.length; i++) {
+          var object = results[i];
+          var content = $(document.getElementById(url)).text() + ': ' + object.get('time');
+          $(document.getElementById(url)).text(content);
+        }
+      },
+      error: function(object, error) {
+        console.log("Error: " + error.code + " " + error.message);
+      }
+    });
+
+  });
+}
+
+function addCount(Counter) {
+  var Counter = AV.Object.extend("Counter");
+  url = $(".leancloud_visitors").attr('id').trim();
+  title = $(".leancloud_visitors").attr('data-flag-title').trim();
+  var query = new AV.Query(Counter);
+  query.equalTo("url", url);
+  query.find({
+    success: function(results) {
+      if (results.length > 0) {
+        var counter = results[0];
+        counter.fetchWhenSave(true);
+        counter.increment("time");
+        counter.save(null, {
+          success: function(counter) {
+            var content = $(document.getElementById(url)).text() + ': ' + counter.get('time');
+            $(document.getElementById(url)).text(content);
+          },
+          error: function(counter, error) {
+            console.log('Failed to save Visitor num, with error message: ' + error.message);
+          }
+        });
+      } else {
+        var newcounter = new Counter();
+        newcounter.set("title", title);
+        newcounter.set("url", url);
+        newcounter.set("time", 1);
+        newcounter.save(null, {
+          success: function(newcounter) {
+              console.log("newcounter.get('time')="+newcounter.get('time'));
+            var content = $(document.getElementById(url)).text() + ': ' + newcounter.get('time');
+            $(document.getElementById(url)).text(content);
+          },
+          error: function(newcounter, error) {
+            console.log('Failed to create');
+          }
+        });
+      }
+    },
+    error: function(error) {
+      console.log('Error:' + error.code + " " + error.message);
+    }
+  });
+}
+$(function() {
+  var Counter = AV.Object.extend("Counter");
+  if ($('.leancloud_visitors').length == 1) {
+    addCount(Counter);
+  } else if ($('.post-title-link').length > 1) {
+    showTime(Counter);
+  }
+}); 
+</script>
+  
+</body>
+</html>

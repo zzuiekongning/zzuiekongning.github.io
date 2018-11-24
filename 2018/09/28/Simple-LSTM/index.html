@@ -1,0 +1,831 @@
+<!doctype html>
+<html class="theme-next use-motion ">
+<head><meta name="generator" content="Hexo 3.8.0">
+  
+
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+  <link rel="stylesheet" type="text/css" href="/others/fancybox/source/jquery.fancybox.css?v=2.1.5">
+
+
+
+  
+    <link href="//fonts.googleapis.com/css?family=Lato:300,400,700,400italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+<link rel="stylesheet" type="text/css" href="/others/font-awesome/css/font-awesome.min.css?v=4.4.0">
+
+<link rel="stylesheet" type="text/css" href="/css/main.css?v=0.4.5.2">
+
+
+    <meta name="description" content="大连理工大学硕士，关注机器学习和人工智能。">
+
+
+
+  <meta name="keywords" content="Hexo,next">
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/images/header.ico?v=0.4.5.2">
+
+
+<meta name="description" content="A few weeks ago I released some code on Github to help people understand how LSTM’s work at the implementation level.  The forward pass is well explained elsewhere and is straightforward to understand">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Simple LSTM">
+<meta property="og:url" content="http://yoursite.com/2018/09/28/Simple-LSTM/index.html">
+<meta property="og:site_name" content="Ning&#39;s Notes">
+<meta property="og:description" content="A few weeks ago I released some code on Github to help people understand how LSTM’s work at the implementation level.  The forward pass is well explained elsewhere and is straightforward to understand">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-11-23T15:22:01.617Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Simple LSTM">
+<meta name="twitter:description" content="A few weeks ago I released some code on Github to help people understand how LSTM’s work at the implementation level.  The forward pass is well explained elsewhere and is straightforward to understand">
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var CONFIG = {
+    scheme: '',
+    sidebar: 'post'
+  };
+</script>
+
+
+
+  <title> Simple LSTM | Ning's Notes </title>
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  <!--[if lte IE 8]>
+  <div style=' clear: both; height: 59px; padding:0 0 0 15px; position: relative;margin:0 auto;'>
+    <a href="http://windows.microsoft.com/en-US/internet-explorer/products/ie/home?ocid=ie6_countdown_bannercode">
+      <img src="http://7u2nvr.com1.z0.glb.clouddn.com/picouterie.jpg" border="0" height="42" width="820"
+           alt="You are using an outdated browser. For a faster, safer browsing experience, upgrade for free today or use other browser ,like chrome firefox safari."
+           style='margin-left:auto;margin-right:auto;display: block;'/>
+    </a>
+  </div>
+<![endif]-->
+  
+
+
+
+
+
+
+  <div id="container" class="container one-column page-post-detail">
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+  
+    <ul id="menu" class="menu ">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-home"></i> <br>
+            
+            Home
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-archive"></i> <br>
+            
+            Archives
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-th"></i> <br>
+            
+            Categories
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-tags"></i> <br>
+            
+            Tags
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-user"></i> <br>
+            
+            About
+          </a>
+        </li>
+      
+
+      
+      
+	  	<span style="font-size:14px;float:right;padding:39px 40px 0 0;">向前走，总会看见花开。</span>
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+
+        	<div id="content" class="content"> 
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  <article class="post post-type-normal " itemscope="" itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                Simple LSTM
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            Posted on
+            <time itemprop="dateCreated" datetime="2018-09-28T10:04:47+08:00" content="2018-09-28">
+              2018-09-28 10:04
+            </time>
+          </span>
+
+          
+
+          
+            
+          
+
+          
+
+          
+            <span id="/2018/09/28/Simple-LSTM/" class="leancloud_visitors" data-flag-title="Simple LSTM">
+            &nbsp; | &nbsp;   
+            views
+            </span>
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body">
+
+      
+      
+
+      
+        <span itemprop="articleBody"><p>A few weeks ago I released some <a href="https://github.com/nicodjimenez/lstm" target="_blank" rel="noopener">code</a> on Github to help people understand how LSTM’s work at the implementation level.  The forward pass is well explained elsewhere and is straightforward to understand, but I derived the backprop equations myself and the backprop code came without any explanation whatsoever.  The goal of this post is to explain the so called <em>backpropagation through time</em> in the context of LSTM’s. </p>
+<p>If you feel like anything is confusing, please post a comment below or submit an issue on Github.  </p>
+<a id="more"></a>
+<p><em>Note:</em> this post assumes you understand the forward pass of an LSTM network, as this part is relatively simple.  Please read this <a href="http://arxiv.org/abs/1506.00019" target="_blank" rel="noopener">great intro paper</a> if you are not familiar with this,  as it contains a very nice intro to LSTM’s.  I follow the same notation as this paper so I recommend reading having the tutorial open in a separate browser tab for easy reference while reading this post.</p>
+<h1 id="Introduction"><a href="#Introduction" class="headerlink" title="Introduction"></a>Introduction</h1><p>The forward pass of an LSTM node is defined as follows:</p>
+<p>$$\begin{eqnarray}<br>g(t) &amp;=&amp; \phi(W_{gx} x(t) + W_{gh} h(t-1) + b_{g}) \<br>i(t) &amp;=&amp; \sigma(W_{ix} x(t) + W_{ih} h(t-1) + b_{i}) \<br>f(t) &amp;=&amp; \sigma(W_{fx} x(t) + W_{fh} h(t-1) + b_{f}) \<br>o(t) &amp;=&amp; \sigma(W_{ox} x(t) + W_{oh} h(t-1) + b_{o}) \<br>s(t) &amp;=&amp; g(t) <em> i(t) + s(t-1) </em> f(t)  \<br>h(t) &amp;=&amp; s(t) * o(t) \<br>\end{eqnarray}$$</p>
+<p>By concatenating the $x(t)$ and $h(t-1)$ vectors as follows: </p>
+<p>$$x_c(t) = [x(t), h(t-1)]$$ </p>
+<p>we can re-write parts of the above as follows:</p>
+<p>$$\begin{eqnarray}<br>g(t) &amp;=&amp; \phi(W_{g} x_c(t) + b_{g}) \<br>i(t) &amp;=&amp; \sigma(W_{i} x_c(t) + b_{i}) \<br>f(t) &amp;=&amp; \sigma(W_{f} x_c(t) + b_{f}) \<br>o(t) &amp;=&amp; \sigma(W_{o} x_c(t) + b_{o}). \<br>\end{eqnarray}$$</p>
+<p>Suppose we have a loss $l(t)$ that we wish to minimize at every time step $t$ that depends on the hidden layer $h$ and the label $y$ at the current time via a loss function $f$: </p>
+<p>$$<br>l(t) = f(h(t), y(t))<br>$$</p>
+<p>where $f$ can be any differentiable loss function, such as the Euclidean loss:</p>
+<p>$$<br>l(t) = f(h(t), y(t)) = | h(t) - y(t) |^2.<br>$$</p>
+<p>Our ultimate goal in this case is to use gradient descent to minimize the loss $L$ over an entire sequence of length $T$:</p>
+<p>$$<br>L = \sum_{t=1}^{T} l(t).<br>$$</p>
+<p>Let’s work through the algebra of computing the loss gradient:</p>
+<p>$$<br>\frac{dL}{dw}<br>$$</p>
+<p>where $w$ is a scalar parameter of the model (for example it may be an entry in the matrix $W_{gx}$).  Since the loss $l(t) = f(h(t), y(t))$ only depends on the values of the hidden layer $h(t)$ and the label $y(t)$, we have by the chain rule:</p>
+<p>$$<br>\frac{dL}{dw} = \sum_{t = 1}^{T} \sum_{i = 1}^{M} \frac{dL}{dh_i(t)}\frac{dh_i(t)}{dw}<br>$$</p>
+<p>where $h_i(t)$ is the scalar corresponding to the $i$’th memory cell’s hidden output and $M$ is the total number of memory cells.  Since the network propagates information forwards in time, changing $h_i(t)$ will have no effect on the loss prior to time $t$, which allows us to write:</p>
+<p>$$\begin{eqnarray}<br>\frac{dL}{dh_i(t)} &amp;=&amp; \sum_{s=1}^T \frac{dl(s)}{dh_i(t)} = \sum_{s=t}^T \frac{dl(s)}{dh_i(t)}<br>\end{eqnarray}<br>$$</p>
+<p>For notational convenience we introduce the variable $L(t)$ that represents the cumulative loss from step $t$ onwards:</p>
+<p>$$<br>L(t) = \sum_{s=t}^{s=T} l(s)<br>$$</p>
+<p>such that $L(1)$ is the loss for the entire sequence.  This allows us to re-write the above equation as:</p>
+<p>$$<br>\frac{dL}{dh_i(t)} = \sum_{s=t}^T \frac{dl(s)}{dh_i(t)} = \frac{dL(t)}{dh_i(t)}<br>$$</p>
+<p>With this in mind, we can re-write our gradient calculation as:</p>
+<p>$$<br>\frac{dL}{dw} = \sum_{t = 1}^{T} \sum_{i = 1}^{M} \frac{dL(t)}{dh_i(t)}\frac{dh_i(t)}{dw}<br>$$</p>
+<p>Make sure you understand this last equation.  The computation of $\frac{dh_i(t)}{dw}$ follows directly follows from the forward propagation equations presented earlier.  We now show how to compute $\frac{dL(t)}{dh_i(t)}$ which is where the so called <em>backpropagation through time</em> comes into play.  </p>
+<h1 id="Backpropagation-through-time"><a href="#Backpropagation-through-time" class="headerlink" title="Backpropagation through time"></a>Backpropagation through time</h1><p>This variable $L(t)$ allows us to express the following recursion:</p>
+<p>$$<br>L(t) = \begin{cases} l(t) + L(t+1) &amp; \text{if} \, t &lt; T \<br>l(t) &amp; \text{if} \, t = T<br>\end{cases}<br>$$</p>
+<p>Hence, given activation $h(t)$ of an LSTM node at time $t$, we have that:</p>
+<p>$$<br>\frac{dL(t)}{dh(t)} = \frac{dl(t)}{dh(t)} + \frac{dL(t+1)}{dh(t)}<br>$$</p>
+<p>Now, we know where the first term on the right hand side $ \frac{dl(t)}{dh(t)}$ comes from: it’s simply the elementwise derivative of the loss $l(t)$ with respect to the activations $h(t)$ at time $t$.  The second term $ \frac{dL(t+1)}{dh(t)} $ is where the recurrent nature of LSTM’s shows up.  It shows that the we need the <em>next</em> node’s derivative information in order to compute the current <em>current</em> node’s derivative information.  Since we will ultimately need to compute $\frac{dL(t)}{dh(t)}$ for all $t=1,\dots,T$, we start by computing </p>
+<p>$$<br>\frac{dL(T)}{dh(T)} = \frac{dl(T)}{dh(T)}<br>$$ </p>
+<p>and work our way backwards through the network. Hence the term <em>backpropagation through time</em>.  With these intuitions in place, we jump into the code.  </p>
+<h1 id="Code"><a href="#Code" class="headerlink" title="Code"></a>Code</h1><p>We now present the code that performs the backprop pass through a single node at time $1 \leq t \leq T$.  The code takes as input: </p>
+<ul>
+<li><code>top_diff_h</code> $= \frac{dL(t)}{dh(t)} = \frac{dl(t)}{dh(t)} + \frac{dL(t+1)}{dh(t)}$</li>
+<li><code>top_diff_s</code> $= \frac{dL(t+1)}{ds(t)}$.</li>
+</ul>
+<p>And computes: </p>
+<ul>
+<li><code>self.state.bottom_diff_s</code>  $= \frac{dL(t)}{ds(t)}$</li>
+<li><code>self.state.bottom_diff_h</code>  $= \frac{dL(t)}{dh(t-1)}$</li>
+</ul>
+<p>whose values will need to be propagated backwards in time.  The code also adds derivatives to:</p>
+<ul>
+<li><code>self.param.wi_diff</code> $= \frac{dL}{dW_{i}}$</li>
+<li>… </li>
+<li><code>self.param.bi_diff</code> $= \frac{dL}{db_{i}}$</li>
+<li>…</li>
+</ul>
+<p>since recall that we must sum the derivatives from each time step: </p>
+<p>$$<br>\frac{dL}{dw} = \sum_{t = 1}^{T} \sum_{i = 1}^{M} \frac{dL(t)}{dh_i(t)}\frac{dh_i(t)}{dw}.<br>$$</p>
+<p>Also, note that we use:</p>
+<ul>
+<li><code>dxc</code> $= \frac{dL}{dx_c(t)}$</li>
+</ul>
+<p>where we recall that $x_c(t) = [x(t), h(t-1)]$.  Without any further due, the code:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">def top_diff_is(self, top_diff_h, top_diff_s):</span><br><span class="line">    # notice that top_diff_s is carried along the constant error carousel</span><br><span class="line">    ds = self.state.o * top_diff_h + top_diff_s</span><br><span class="line">    do = self.state.s * top_diff_h</span><br><span class="line">    di = self.state.g * ds</span><br><span class="line">    dg = self.state.i * ds</span><br><span class="line">    df = self.s_prev * ds</span><br><span class="line"></span><br><span class="line">    # diffs w.r.t. vector inside sigma / tanh function</span><br><span class="line">    di_input = (1. - self.state.i) * self.state.i * di </span><br><span class="line">    df_input = (1. - self.state.f) * self.state.f * df </span><br><span class="line">    do_input = (1. - self.state.o) * self.state.o * do </span><br><span class="line">    dg_input = (1. - self.state.g ** 2) * dg</span><br><span class="line"></span><br><span class="line">    # diffs w.r.t. inputs</span><br><span class="line">    self.param.wi_diff += np.outer(di_input, self.xc)</span><br><span class="line">    self.param.wf_diff += np.outer(df_input, self.xc)</span><br><span class="line">    self.param.wo_diff += np.outer(do_input, self.xc)</span><br><span class="line">    self.param.wg_diff += np.outer(dg_input, self.xc)</span><br><span class="line">    self.param.bi_diff += di_input</span><br><span class="line">    self.param.bf_diff += df_input       </span><br><span class="line">    self.param.bo_diff += do_input</span><br><span class="line">    self.param.bg_diff += dg_input       </span><br><span class="line"></span><br><span class="line">    # compute bottom diff</span><br><span class="line">    dxc = np.zeros_like(self.xc)</span><br><span class="line">    dxc += np.dot(self.param.wi.T, di_input)</span><br><span class="line">    dxc += np.dot(self.param.wf.T, df_input)</span><br><span class="line">    dxc += np.dot(self.param.wo.T, do_input)</span><br><span class="line">    dxc += np.dot(self.param.wg.T, dg_input)</span><br><span class="line"></span><br><span class="line">    # save bottom diffs</span><br><span class="line">    self.state.bottom_diff_s = ds * self.state.f</span><br><span class="line">    self.state.bottom_diff_x = dxc[:self.param.x_dim]</span><br><span class="line">    self.state.bottom_diff_h = dxc[self.param.x_dim:]</span><br></pre></td></tr></table></figure>
+<h1 id="Details"><a href="#Details" class="headerlink" title="Details"></a>Details</h1><p>The forward propagation equations show that <font color="#00fff">modifying $s(t)$ affects the loss $L(t)$ by directly changing the values of $h(t)$ as well as $h(t+1)$.  However, modifying $s(t)$ affects $L(t+1)$ only by modifying $h(t+1)$</font>.  Therefore, by the chain rule: </p>
+<p>$$<br>\begin{eqnarray}<br>\frac{dL(t)}{ds_i(t)} &amp;=&amp; \frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} + \frac{dL(t)}{dh_i(t+1)} \frac{dh_i(t+1)}{ds_i(t)}  \<br>&amp;=&amp; \frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} + \frac{dL(t+1)}{dh_i(t+1)} \frac{dh_i(t+1)}{ds_i(t)}  \<br>&amp;=&amp; \frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} + \frac{dL(t+1)}{ds_i(t)}  \<br>&amp;=&amp; \frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} + [\texttt{top_diff_s}]_i.  \<br>\end{eqnarray}<br>$$</p>
+<p>Since the forward propagation equations state:</p>
+<p>$$<br>h(t) = s(t) * o(t)<br>$$</p>
+<p>we get that:</p>
+<p>$$<br>\frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} =  o_i(t) * [\texttt{top_diff_h}]_i.<br>$$</p>
+<p>Putting all this together we have:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ds = self.state.o * top_diff_h + top_diff_s</span><br></pre></td></tr></table></figure>
+<p>The rest of the equations should be straightforward to derive, please let me know if anything is unclear.  </p>
+<p>Make sure to check out <a href="https://mathpix.com" target="_blank" rel="noopener">Mathpix</a> if you are a LaTeX user and <a href="https://losswise.com" target="_blank" rel="noopener">Losswise</a> if you need a monitoring solution for training deep learning models.</p>
+<p>Happy training!</p>
+</span>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/10/23/获取中外论文/" rel="prev">
+                <i class="fa fa-chevron-left"></i> 获取中外论文
+              </a>
+            
+          </div>
+
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/09/27/随记/" rel="next">
+                随记 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+ </div>
+
+        
+
+        
+          <div class="comments" id="comments">
+            
+          </div>
+        
+      
+
+        
+          
+  
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+      
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table Of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview" sidebar-panel="">
+        <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+          <img class="site-author-image" src="/images/default_avatar.jpg" alt="孔宁" itemprop="image">
+          <p class="site-author-name" itemprop="name">孔宁</p>
+        </div>
+        <p class="site-description motion-element" itemprop="description">大连理工大学硕士，关注机器学习和人工智能。</p>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-name">posts</span>
+            </a>
+          </div>
+
+          <div class="site-state-item site-state-categories">
+            <a href="/categories">
+              <span class="site-state-item-count">0</span>
+              <span class="site-state-item-name">categories</span>
+              </a>
+          </div>
+
+          <div class="site-state-item site-state-tags">
+            <a href="/tags">
+              <span class="site-state-item-count">0</span>
+              <span class="site-state-item-name">tags</span>
+              </a>
+          </div>
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/zzuiekongning?tab=repositories" target="_blank">
+                  <i class="fa fa-github"></i> GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="https://weibo.com/u/2532196105" target="_blank">
+                  <i class="fa fa-微博"></i> 微博
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel-active">
+          <div class="post-toc-indicator-top post-toc-indicator"></div>
+          <div class="post-toc">
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Introduction"><span class="nav-number">1.</span> <span class="nav-text">Introduction</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Backpropagation-through-time"><span class="nav-number">2.</span> <span class="nav-text">Backpropagation through time</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Code"><span class="nav-number">3.</span> <span class="nav-text">Code</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Details"><span class="nav-number">4.</span> <span class="nav-text">Details</span></a></li></ol></div>
+            
+          </div>
+          <div class="post-toc-indicator-bottom post-toc-indicator"></div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+	  </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner"> <div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="icon-next-heart fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">孔宁</span>
+</div>
+
+<div class="powered-by">
+  Powered by <a class="theme-link" href="http://hexo.io">Hexo</a>
+</div>
+
+<div class="theme-info">
+  Theme -
+  <a class="theme-link" href="#">
+    FreeSky
+  </a>(Reserved)
+
+  
+  <span id="busuanzi_container_site_uv">
+     &nbsp; | &nbsp;  用户量: <span id="busuanzi_value_site_uv"></span>
+  </span>
+  <span id="busuanzi_container_site_pv">
+    &nbsp; | &nbsp;  总访问量: <span id="busuanzi_value_site_pv"></span>
+  </span>
+
+  
+</div>
+
+
+<script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+ </div>
+    </footer>
+
+    <div class="back-to-top"></div>
+  </div>
+
+  <script type="text/javascript" src="/others/jquery/index.js?v=2.1.3"></script>
+
+  
+  
+  
+    
+    
+
+  
+
+
+  
+  
+  <script type="text/javascript" src="/others/fancybox/source/jquery.fancybox.pack.js"></script>
+  <script type="text/javascript" src="/js/fancy-box.js?v=0.4.5.2"></script>
+
+
+  <script type="text/javascript" src="/js/helpers.js?v=0.4.5.2"></script>
+  
+
+  <script type="text/javascript" src="/others/velocity/velocity.min.js"></script>
+  <script type="text/javascript" src="/others/velocity/velocity.ui.min.js"></script>
+
+  <script type="text/javascript" src="/js/motion_global.js?v=0.4.5.2" id="motion.global"></script>
+
+
+
+
+  <script type="text/javascript" src="/js/nav-toggle.js?v=0.4.5.2"></script>
+  <script type="text/javascript" src="/others/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  
+<script type="text/javascript" src="/js/bootstrap.scrollspy.js?v=0.4.5.2" id="bootstrap.scrollspy.custom"></script>
+
+
+<script type="text/javascript" id="sidebar.toc.highlight">
+  $(document).ready(function () {
+    var tocSelector = '.post-toc';
+    var $tocSelector = $(tocSelector);
+    var activeCurrentSelector = '.active-current';
+
+    $tocSelector
+      .on('activate.bs.scrollspy', function () {
+        var $currentActiveElement = $(tocSelector + ' .active').last();
+
+        removeCurrentActiveClass();
+        $currentActiveElement.addClass('active-current');
+
+        $tocSelector[0].scrollTop = $currentActiveElement.position().top;
+      })
+      .on('clear.bs.scrollspy', function () {
+        removeCurrentActiveClass();
+      });
+
+    function removeCurrentActiveClass () {
+      $(tocSelector + ' ' + activeCurrentSelector)
+        .removeClass(activeCurrentSelector.substring(1));
+    }
+
+    function processTOC () {
+      getTOCMaxHeight();
+      toggleTOCOverflowIndicators();
+    }
+
+    function getTOCMaxHeight () {
+      var height = $('.sidebar').height() -
+                   $tocSelector.position().top -
+                   $('.post-toc-indicator-bottom').height();
+
+      $tocSelector.css('height', height);
+
+      return height;
+    }
+
+    function toggleTOCOverflowIndicators () {
+      tocOverflowIndicator(
+        '.post-toc-indicator-top',
+        $tocSelector.scrollTop() > 0 ? 'show' : 'hide'
+      );
+
+      tocOverflowIndicator(
+        '.post-toc-indicator-bottom',
+        $tocSelector.scrollTop() >= $tocSelector.find('ol').height() - $tocSelector.height() ? 'hide' : 'show'
+      )
+    }
+
+    $(document).on('sidebar.motion.complete', function () {
+      processTOC();
+    });
+
+    $('body').scrollspy({ target: tocSelector });
+    $(window).on('resize', function () {
+      if ( $('.sidebar').hasClass('sidebar-active') ) {
+        processTOC();
+      }
+    });
+
+    onScroll($tocSelector);
+
+    function onScroll (element) {
+      element.on('mousewheel DOMMouseScroll', function (event) {
+          var oe = event.originalEvent;
+          var delta = oe.wheelDelta || -oe.detail;
+
+          this.scrollTop += ( delta < 0 ? 1 : -1 ) * 30;
+          event.preventDefault();
+
+          toggleTOCOverflowIndicators();
+      });
+    }
+
+    function tocOverflowIndicator (indicator, action) {
+      var $indicator = $(indicator);
+      var opacity = action === 'show' ? 0.4 : 0;
+      $indicator.velocity ?
+        $indicator.velocity('stop').velocity({
+          opacity: opacity
+        }, { duration: 100 }) :
+        $indicator.stop().animate({
+          opacity: opacity
+        }, 100);
+    }
+
+  });
+</script>
+
+<script type="text/javascript" id="sidebar.nav">
+  $(document).ready(function () {
+    var html = $('html');
+    var TAB_ANIMATE_DURATION = 200;
+    var hasVelocity = $.isFunction(html.velocity);
+
+    $('.sidebar-nav li').on('click', function () {
+      var item = $(this);
+      var activeTabClassName = 'sidebar-nav-active';
+      var activePanelClassName = 'sidebar-panel-active';
+      if (item.hasClass(activeTabClassName)) {
+        return;
+      }
+
+      var currentTarget = $('.' + activePanelClassName);
+      var target = $('.' + item.data('target'));
+
+      hasVelocity ?
+        currentTarget.velocity('transition.slideUpOut', TAB_ANIMATE_DURATION, function () {
+          target
+            .velocity('stop')
+            .velocity('transition.slideDownIn', TAB_ANIMATE_DURATION)
+            .addClass(activePanelClassName);
+        }) :
+        currentTarget.animate({ opacity: 0 }, TAB_ANIMATE_DURATION, function () {
+          currentTarget.hide();
+          target
+            .stop()
+            .css({'opacity': 0, 'display': 'block'})
+            .animate({ opacity: 1 }, TAB_ANIMATE_DURATION, function () {
+              currentTarget.removeClass(activePanelClassName);
+              target.addClass(activePanelClassName);
+            });
+        });
+
+      item.siblings().removeClass(activeTabClassName);
+      item.addClass(activeTabClassName);
+    });
+
+    $('.post-toc a').on('click', function (e) {
+      e.preventDefault();
+      var targetSelector = escapeSelector(this.getAttribute('href'));
+      var offset = $(targetSelector).offset().top;
+      hasVelocity ?
+        html.velocity('stop').velocity('scroll', {
+          offset: offset  + 'px',
+          mobileHA: false
+        }) :
+        $('html, body').stop().animate({
+          scrollTop: offset
+        }, 500);
+    });
+
+    // Expand sidebar on post detail page by default, when post has a toc.
+    var $tocContent = $('.post-toc-content');
+    var $aboutContent = $('#posts-about');
+    if (isDesktop() && CONFIG.sidebar === 'post') {
+      if ($tocContent.length > 0 && $tocContent.html().trim().length > 0 && $aboutContent.length === 0) {
+        displaySidebar();
+      }
+    }
+  });
+</script>
+
+
+
+  <script type="text/javascript">
+    $(document).ready(function () {
+      if (CONFIG.sidebar === 'always') {
+        displaySidebar();
+      }
+      if (isMobile()) {
+        FastClick.attach(document.body);
+      }
+
+      motionIntegrator.bootstrap();
+    });
+  </script>
+
+  
+  
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+      processEscapes: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+  });
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for (i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="http://cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/lazyload.js"></script>
+  <script type="text/javascript">
+    $(function () {
+      $("#posts").find('img').lazyload({
+        placeholder: "/images/loading.gif",
+        effect: "fadeIn"
+      });
+    });
+  </script>
+  
+     <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.1.js"></script>
+<script>AV.initialize("VmAcWiBwF1SdavvjD8vkHJLn-gzGzoHsz", "cmuscA82gXyC9N1tgjH1m8bK");</script>
+<script>
+function showTime(Counter) {
+  var query = new AV.Query(Counter);
+  $(".leancloud_visitors").each(function() {
+    var url = $(this).attr("id").trim();
+    query.equalTo("url", url);
+    query.find({
+      success: function(results) {
+        if (results.length == 0) {
+          var content = $(document.getElementById(url)).text() + ': 0';
+          $(document.getElementById(url)).text(content);
+          return;
+        }
+        for (var i = 0; i < results.length; i++) {
+          var object = results[i];
+          var content = $(document.getElementById(url)).text() + ': ' + object.get('time');
+          $(document.getElementById(url)).text(content);
+        }
+      },
+      error: function(object, error) {
+        console.log("Error: " + error.code + " " + error.message);
+      }
+    });
+
+  });
+}
+
+function addCount(Counter) {
+  var Counter = AV.Object.extend("Counter");
+  url = $(".leancloud_visitors").attr('id').trim();
+  title = $(".leancloud_visitors").attr('data-flag-title').trim();
+  var query = new AV.Query(Counter);
+  query.equalTo("url", url);
+  query.find({
+    success: function(results) {
+      if (results.length > 0) {
+        var counter = results[0];
+        counter.fetchWhenSave(true);
+        counter.increment("time");
+        counter.save(null, {
+          success: function(counter) {
+            var content = $(document.getElementById(url)).text() + ': ' + counter.get('time');
+            $(document.getElementById(url)).text(content);
+          },
+          error: function(counter, error) {
+            console.log('Failed to save Visitor num, with error message: ' + error.message);
+          }
+        });
+      } else {
+        var newcounter = new Counter();
+        newcounter.set("title", title);
+        newcounter.set("url", url);
+        newcounter.set("time", 1);
+        newcounter.save(null, {
+          success: function(newcounter) {
+              console.log("newcounter.get('time')="+newcounter.get('time'));
+            var content = $(document.getElementById(url)).text() + ': ' + newcounter.get('time');
+            $(document.getElementById(url)).text(content);
+          },
+          error: function(newcounter, error) {
+            console.log('Failed to create');
+          }
+        });
+      }
+    },
+    error: function(error) {
+      console.log('Error:' + error.code + " " + error.message);
+    }
+  });
+}
+$(function() {
+  var Counter = AV.Object.extend("Counter");
+  if ($('.leancloud_visitors').length == 1) {
+    addCount(Counter);
+  } else if ($('.post-title-link').length > 1) {
+    showTime(Counter);
+  }
+}); 
+</script>
+  
+</body>
+</html>
