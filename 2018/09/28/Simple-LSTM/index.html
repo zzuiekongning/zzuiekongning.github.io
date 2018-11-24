@@ -45,17 +45,17 @@
   <link rel="shortcut icon" type="image/x-icon" href="/images/header.ico?v=0.4.5.2">
 
 
-<meta name="description" content="A few weeks ago I released some code on Github to help people understand how LSTM’s work at the implementation level.  The forward pass is well explained elsewhere and is straightforward to understand">
+<meta name="description" content="A few weeks ago I released some code on Github to help people understand how LSTM’s work at the implementation level.  The forward pass is well explained elsewhere and is straightforward to underst">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Simple LSTM">
 <meta property="og:url" content="http://yoursite.com/2018/09/28/Simple-LSTM/index.html">
 <meta property="og:site_name" content="Ning&#39;s Notes">
-<meta property="og:description" content="A few weeks ago I released some code on Github to help people understand how LSTM’s work at the implementation level.  The forward pass is well explained elsewhere and is straightforward to understand">
+<meta property="og:description" content="A few weeks ago I released some code on Github to help people understand how LSTM’s work at the implementation level.  The forward pass is well explained elsewhere and is straightforward to underst">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2018-11-23T15:22:01.617Z">
+<meta property="og:updated_time" content="2018-11-24T07:56:16.321Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Simple LSTM">
-<meta name="twitter:description" content="A few weeks ago I released some code on Github to help people understand how LSTM’s work at the implementation level.  The forward pass is well explained elsewhere and is straightforward to understand">
+<meta name="twitter:description" content="A few weeks ago I released some code on Github to help people understand how LSTM’s work at the implementation level.  The forward pass is well explained elsewhere and is straightforward to underst">
 
 
 <script type="text/javascript" id="hexo.configuration">
@@ -232,7 +232,10 @@
       
 
       
-        <span itemprop="articleBody"><p>A few weeks ago I released some <a href="https://github.com/nicodjimenez/lstm" target="_blank" rel="noopener">code</a> on Github to help people understand how LSTM’s work at the implementation level.  The forward pass is well explained elsewhere and is straightforward to understand, but I derived the backprop equations myself and the backprop code came without any explanation whatsoever.  The goal of this post is to explain the so called <em>backpropagation through time</em> in the context of LSTM’s. </p>
+        <span itemprop="articleBody"><!-- Go to www.addthis.com/dashboard to customize your tools -->
+<script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5be554abf8e99a9f"></script>
+
+<p>A few weeks ago I released some <a href="https://github.com/nicodjimenez/lstm" target="_blank" rel="noopener">code</a> on Github to help people understand how LSTM’s work at the implementation level.  The forward pass is well explained elsewhere and is straightforward to understand, but I derived the backprop equations myself and the backprop code came without any explanation whatsoever.  The goal of this post is to explain the so called <em>backpropagation through time</em> in the context of LSTM’s. </p>
 <p>If you feel like anything is confusing, please post a comment below or submit an issue on Github.  </p>
 <a id="more"></a>
 <p><em>Note:</em> this post assumes you understand the forward pass of an LSTM network, as this part is relatively simple.  Please read this <a href="http://arxiv.org/abs/1506.00019" target="_blank" rel="noopener">great intro paper</a> if you are not familiar with this,  as it contains a very nice intro to LSTM’s.  I follow the same notation as this paper so I recommend reading having the tutorial open in a separate browser tab for easy reference while reading this post.</p>
@@ -253,21 +256,8 @@
 <p>where $w$ is a scalar parameter of the model (for example it may be an entry in the matrix $W_{gx}$).  Since the loss $l(t) = f(h(t), y(t))$ only depends on the values of the hidden layer $h(t)$ and the label $y(t)$, we have by the chain rule:</p>
 <p>$$<br>\frac{dL}{dw} = \sum_{t = 1}^{T} \sum_{i = 1}^{M} \frac{dL}{dh_i(t)}\frac{dh_i(t)}{dw}<br>$$</p>
 <p>where $h_i(t)$ is the scalar corresponding to the $i$’th memory cell’s hidden output and $M$ is the total number of memory cells.  Since the network propagates information forwards in time, changing $h_i(t)$ will have no effect on the loss prior to time $t$, which allows us to write:</p>
-<p>$$\begin{eqnarray}<br>\frac{dL}{dh_i(t)} &amp;=&amp; \sum_{s=1}^T \frac{dl(s)}{dh_i(t)} = \sum_{s=t}^T \frac{dl(s)}{dh_i(t)}<br>\end{eqnarray}<br>$$</p>
-<p>For notational convenience we introduce the variable $L(t)$ that represents the cumulative loss from step $t$ onwards:</p>
-<p>$$<br>L(t) = \sum_{s=t}^{s=T} l(s)<br>$$</p>
-<p>such that $L(1)$ is the loss for the entire sequence.  This allows us to re-write the above equation as:</p>
-<p>$$<br>\frac{dL}{dh_i(t)} = \sum_{s=t}^T \frac{dl(s)}{dh_i(t)} = \frac{dL(t)}{dh_i(t)}<br>$$</p>
-<p>With this in mind, we can re-write our gradient calculation as:</p>
-<p>$$<br>\frac{dL}{dw} = \sum_{t = 1}^{T} \sum_{i = 1}^{M} \frac{dL(t)}{dh_i(t)}\frac{dh_i(t)}{dw}<br>$$</p>
-<p>Make sure you understand this last equation.  The computation of $\frac{dh_i(t)}{dw}$ follows directly follows from the forward propagation equations presented earlier.  We now show how to compute $\frac{dL(t)}{dh_i(t)}$ which is where the so called <em>backpropagation through time</em> comes into play.  </p>
-<h1 id="Backpropagation-through-time"><a href="#Backpropagation-through-time" class="headerlink" title="Backpropagation through time"></a>Backpropagation through time</h1><p>This variable $L(t)$ allows us to express the following recursion:</p>
-<p>$$<br>L(t) = \begin{cases} l(t) + L(t+1) &amp; \text{if} \, t &lt; T \<br>l(t) &amp; \text{if} \, t = T<br>\end{cases}<br>$$</p>
-<p>Hence, given activation $h(t)$ of an LSTM node at time $t$, we have that:</p>
-<p>$$<br>\frac{dL(t)}{dh(t)} = \frac{dl(t)}{dh(t)} + \frac{dL(t+1)}{dh(t)}<br>$$</p>
-<p>Now, we know where the first term on the right hand side $ \frac{dl(t)}{dh(t)}$ comes from: it’s simply the elementwise derivative of the loss $l(t)$ with respect to the activations $h(t)$ at time $t$.  The second term $ \frac{dL(t+1)}{dh(t)} $ is where the recurrent nature of LSTM’s shows up.  It shows that the we need the <em>next</em> node’s derivative information in order to compute the current <em>current</em> node’s derivative information.  Since we will ultimately need to compute $\frac{dL(t)}{dh(t)}$ for all $t=1,\dots,T$, we start by computing </p>
-<p>$$<br>\frac{dL(T)}{dh(T)} = \frac{dl(T)}{dh(T)}<br>$$ </p>
-<p>and work our way backwards through the network. Hence the term <em>backpropagation through time</em>.  With these intuitions in place, we jump into the code.  </p>
+<p>$$\begin{eqnarray}<br>\frac{dL}{dh_i(t)} &amp;=&amp; \sum_{s=1}^T \frac{dl(s)}{dh_i(t)} = \sum_{s=t}^T \frac{dl(s)}{dh_i(t)}<br>\end{eqnarray}<br>$$<br>For notational convenience we introduce the variable $L(t)$ that represents the cumulative loss from step $t$ onwards:<br>$$<br>L(t) = \sum_{s=t}^{s=T} l(s)<br>$$<br>such that $L(1)$ is the loss for the entire sequence.  This allows us to re-write the above equation as:<br>$$<br>\frac{dL}{dh_i(t)} = \sum_{s=t}^T \frac{dl(s)}{dh_i(t)} = \frac{dL(t)}{dh_i(t)}<br>$$<br>With this in mind, we can re-write our gradient calculation as:<br>$$<br>\frac{dL}{dw} = \sum_{t = 1}^{T} \sum_{i = 1}^{M} \frac{dL(t)}{dh_i(t)}\frac{dh_i(t)}{dw}<br>$$<br>Make sure you understand this last equation.  The computation of $\frac{dh_i(t)}{dw}$ follows directly follows from the forward propagation equations presented earlier.  We now show how to compute $\frac{dL(t)}{dh_i(t)}$ which is where the so called <em>backpropagation through time</em> comes into play.  </p>
+<h1 id="Backpropagation-through-time"><a href="#Backpropagation-through-time" class="headerlink" title="Backpropagation through time"></a>Backpropagation through time</h1><p>This variable $L(t)$ allows us to express the following recursion:<br>$$<br>L(t) = \begin{cases} l(t) + L(t+1) &amp; \text{if} \, t &lt; T \<br>l(t) &amp; \text{if} \, t = T<br>\end{cases}<br>$$<br>Hence, given activation $h(t)$ of an LSTM node at time $t$, we have that:<br>$$<br>\frac{dL(t)}{dh(t)} = \frac{dl(t)}{dh(t)} + \frac{dL(t+1)}{dh(t)}<br>$$<br>Now, we know where the first term on the right hand side $ \frac{dl(t)}{dh(t)}$ comes from: it’s simply the elementwise derivative of the loss $l(t)$ with respect to the activations $h(t)$ at time $t$.  The second term $ \frac{dL(t+1)}{dh(t)} $ is where the recurrent nature of LSTM’s shows up.  It shows that the we need the <em>next</em> node’s derivative information in order to compute the current <em>current</em> node’s derivative information.  Since we will ultimately need to compute $\frac{dL(t)}{dh(t)}$ for all $t=1,\dots,T$, we start by computing<br>$$<br>\frac{dL(T)}{dh(T)} = \frac{dl(T)}{dh(T)}<br>$$<br>and work our way backwards through the network. Hence the term <em>backpropagation through time</em>.  With these intuitions in place, we jump into the code.  </p>
 <h1 id="Code"><a href="#Code" class="headerlink" title="Code"></a>Code</h1><p>We now present the code that performs the backprop pass through a single node at time $1 \leq t \leq T$.  The code takes as input: </p>
 <ul>
 <li><code>top_diff_h</code> $= \frac{dL(t)}{dh(t)} = \frac{dl(t)}{dh(t)} + \frac{dL(t+1)}{dh(t)}$</li>
@@ -285,20 +275,13 @@
 <li><code>self.param.bi_diff</code> $= \frac{dL}{db_{i}}$</li>
 <li>…</li>
 </ul>
-<p>since recall that we must sum the derivatives from each time step: </p>
-<p>$$<br>\frac{dL}{dw} = \sum_{t = 1}^{T} \sum_{i = 1}^{M} \frac{dL(t)}{dh_i(t)}\frac{dh_i(t)}{dw}.<br>$$</p>
-<p>Also, note that we use:</p>
+<p>since recall that we must sum the derivatives from each time step:<br>$$<br>\frac{dL}{dw} = \sum_{t = 1}^{T} \sum_{i = 1}^{M} \frac{dL(t)}{dh_i(t)}\frac{dh_i(t)}{dw}.<br>$$<br>Also, note that we use:</p>
 <ul>
 <li><code>dxc</code> $= \frac{dL}{dx_c(t)}$</li>
 </ul>
 <p>where we recall that $x_c(t) = [x(t), h(t-1)]$.  Without any further due, the code:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">def top_diff_is(self, top_diff_h, top_diff_s):</span><br><span class="line">    # notice that top_diff_s is carried along the constant error carousel</span><br><span class="line">    ds = self.state.o * top_diff_h + top_diff_s</span><br><span class="line">    do = self.state.s * top_diff_h</span><br><span class="line">    di = self.state.g * ds</span><br><span class="line">    dg = self.state.i * ds</span><br><span class="line">    df = self.s_prev * ds</span><br><span class="line"></span><br><span class="line">    # diffs w.r.t. vector inside sigma / tanh function</span><br><span class="line">    di_input = (1. - self.state.i) * self.state.i * di </span><br><span class="line">    df_input = (1. - self.state.f) * self.state.f * df </span><br><span class="line">    do_input = (1. - self.state.o) * self.state.o * do </span><br><span class="line">    dg_input = (1. - self.state.g ** 2) * dg</span><br><span class="line"></span><br><span class="line">    # diffs w.r.t. inputs</span><br><span class="line">    self.param.wi_diff += np.outer(di_input, self.xc)</span><br><span class="line">    self.param.wf_diff += np.outer(df_input, self.xc)</span><br><span class="line">    self.param.wo_diff += np.outer(do_input, self.xc)</span><br><span class="line">    self.param.wg_diff += np.outer(dg_input, self.xc)</span><br><span class="line">    self.param.bi_diff += di_input</span><br><span class="line">    self.param.bf_diff += df_input       </span><br><span class="line">    self.param.bo_diff += do_input</span><br><span class="line">    self.param.bg_diff += dg_input       </span><br><span class="line"></span><br><span class="line">    # compute bottom diff</span><br><span class="line">    dxc = np.zeros_like(self.xc)</span><br><span class="line">    dxc += np.dot(self.param.wi.T, di_input)</span><br><span class="line">    dxc += np.dot(self.param.wf.T, df_input)</span><br><span class="line">    dxc += np.dot(self.param.wo.T, do_input)</span><br><span class="line">    dxc += np.dot(self.param.wg.T, dg_input)</span><br><span class="line"></span><br><span class="line">    # save bottom diffs</span><br><span class="line">    self.state.bottom_diff_s = ds * self.state.f</span><br><span class="line">    self.state.bottom_diff_x = dxc[:self.param.x_dim]</span><br><span class="line">    self.state.bottom_diff_h = dxc[self.param.x_dim:]</span><br></pre></td></tr></table></figure>
-<h1 id="Details"><a href="#Details" class="headerlink" title="Details"></a>Details</h1><p>The forward propagation equations show that <font color="#00fff">modifying $s(t)$ affects the loss $L(t)$ by directly changing the values of $h(t)$ as well as $h(t+1)$.  However, modifying $s(t)$ affects $L(t+1)$ only by modifying $h(t+1)$</font>.  Therefore, by the chain rule: </p>
-<p>$$<br>\begin{eqnarray}<br>\frac{dL(t)}{ds_i(t)} &amp;=&amp; \frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} + \frac{dL(t)}{dh_i(t+1)} \frac{dh_i(t+1)}{ds_i(t)}  \<br>&amp;=&amp; \frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} + \frac{dL(t+1)}{dh_i(t+1)} \frac{dh_i(t+1)}{ds_i(t)}  \<br>&amp;=&amp; \frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} + \frac{dL(t+1)}{ds_i(t)}  \<br>&amp;=&amp; \frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} + [\texttt{top_diff_s}]_i.  \<br>\end{eqnarray}<br>$$</p>
-<p>Since the forward propagation equations state:</p>
-<p>$$<br>h(t) = s(t) * o(t)<br>$$</p>
-<p>we get that:</p>
-<p>$$<br>\frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} =  o_i(t) * [\texttt{top_diff_h}]_i.<br>$$</p>
+<h1 id="Details"><a href="#Details" class="headerlink" title="Details"></a>Details</h1><p>The forward propagation equations show that <font color="#00fff">modifying $s(t)$ affects the loss $L(t)$ by directly changing the values of $h(t)$ as well as $h(t+1)$.  However, modifying $s(t)$ affects $L(t+1)$ only by modifying $h(t+1)$</font>.  Therefore, by the chain rule:<br>$$<br>\begin{eqnarray}<br>\frac{dL(t)}{ds_i(t)} &amp;=&amp; \frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} + \frac{dL(t)}{dh_i(t+1)} \frac{dh_i(t+1)}{ds_i(t)}  \<br>&amp;=&amp; \frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} + \frac{dL(t+1)}{dh_i(t+1)} \frac{dh_i(t+1)}{ds_i(t)}  \<br>&amp;=&amp; \frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} + \frac{dL(t+1)}{ds_i(t)}  \<br>&amp;=&amp; \frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} + [\texttt{top_diff_s}]_i.  \<br>\end{eqnarray}<br>$$<br>Since the forward propagation equations state:<br>$$<br>h(t) = s(t) <em> o(t)<br>$$<br>we get that:<br>$$<br>\frac{dL(t)}{dh_i(t)} \frac{dh_i(t)}{ds_i(t)} =  o_i(t) </em> [\texttt{top_diff_h}]_i.<br>$$</p>
 <p>Putting all this together we have:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ds = self.state.o * top_diff_h + top_diff_s</span><br></pre></td></tr></table></figure>
 <p>The rest of the equations should be straightforward to derive, please let me know if anything is unclear.  </p>
@@ -389,7 +372,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">17</span>
+              <span class="site-state-item-count">18</span>
               <span class="site-state-item-name">posts</span>
             </a>
           </div>
